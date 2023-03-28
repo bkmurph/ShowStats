@@ -19,21 +19,21 @@ def create_show_list(df: pd.DataFrame, artist_name: str):
     df_new = df[df["artist"] == artist_name].reset_index(drop=True).copy()
 
     for i in range(len(df_new)):
-        venue = df_new.loc[i, "venue.name"]
+        venue = df_new.loc[i, "venue_name"]
         date = df_new.loc[i, "display_date"]
-        location = df_new.loc[i, "venue.location"]
+        location = df_new.loc[i, "venue_location"]
         uuid = df_new.loc[i, "uuid"]
 
-        show_list.append({"label": f"{date} / {location} / {venue}", "value": uuid})
+        show_list.append({"label": f"{date} / {location}", "value": uuid})
     return show_list
 
 
 color_dict = {
     "Phish": "#00205B",
     "Widespread Panic": "#00843D",
-    "Goose": "#ED7766",
-    "Grateful Dead": "#45BCE5",
-    "Billy Strings": "#00C39C",
+    "Goose": "#E1F6F4",
+    "Grateful Dead": "#A8DDA8",  # 45BCE5
+    "Billy Strings": "#779ecb",  # 00C39C 6AC1B8
 }
 
 category_orders = {

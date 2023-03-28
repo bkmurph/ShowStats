@@ -1,5 +1,7 @@
+import time
 import warnings
 
+import numpy as np
 import pandas as pd
 import requests
 
@@ -12,6 +14,11 @@ slugs = [
     "goose",
     "wsp",
 ]
+
+headers = {
+    "Accept": "application/json",
+    "x-api-key": "Obo7MA1IRsf4nb4mSpOYuei5L6viXmLzYd8E",
+}
 
 artist_id_mapping = {
     5: "Widespread Panic",
@@ -122,7 +129,7 @@ def get_show_songs(uuid_list=list[str]):
         show = show.drop_duplicates(subset=["title"])
         show["title"] = show["title"].str.upper()
         keywords = [
-            "JAM",
+            # "JAM",
             "BANTER",
             "TUNING",
             "INTRO",
@@ -142,9 +149,77 @@ def get_show_songs(uuid_list=list[str]):
     return setlist_final
 
 
+def get_setlist_fm(mbid=list[str], headers=dict()):
+
+    base_url = f"https://api.setlist.fm/rest/1.0/artist/{mbid}/setlists?"
+    request = requests.get(base_url, headers=headers)
+    find_num_pages = pd.json_normalize(request.json())
+    find_num_pages["num_pages"] = np.ceil(
+        find_num_pages["total"] / find_num_pages["itemsPerPage"]
+    )
+    num_pages = np.int64(find_num_pages.iloc[:, 5][0])
+
+    setlist_info = []
+
+    for i in range(1, num_pages + 1):
+        url = f"https://api.setlist.fm/rest/1.0/artist/{mbid}/setlists?p={i}"
+        page = requests.get(url, headers=headers)
+        time.sleep(2)
+        df = pd.json_normalize(page.json(), record_path=["setlist"])
+        select_cols = [
+            "eventDate",
+            "artist.name",
+            "venue.name",
+            "venue.city.name",
+            "venue.city.state",
+            "venue.city.coords.lat",
+            "venue.city.coords.long",
+            "venue.city.country.name",
+        ]
+        df = df[select_cols]
+        df["eventDate"] = pd.to_datetime(
+            df["eventDate"], yearfirst=True, format="%d-%m-%Y"
+        ).astype("str")
+        setlist_info.append(df)
+
+    df_out = pd.concat(setlist_info)
+    df_out = df_out.rename(columns={"venue.name": "venue_sfm"})
+    df_out = df_out.drop_duplicates(subset=["eventDate"]).copy()
+
+    return df_out
+
+
+def coalesce_venue_info(df):
+    df["location_sfm"] = df["venue.city.name"] + ", " + df["venue.city.state"]
+    df["venue_name"] = df[["venue_sfm", "venue.name_x"]].bfill(axis=1).iloc[:, 0]
+    df["venue_location"] = (
+        df[["venue.location", "location_sfm"]].bfill(axis=1).iloc[:, 0]
+    )
+    df["latitude"] = (
+        df[["venue.latitude", "venue.city.coords.lat"]].bfill(axis=1).iloc[:, 0]
+    )
+    df["longitude"] = (
+        df[["venue.longitude", "venue.city.coords.long"]].bfill(axis=1).iloc[:, 0]
+    )
+
+    return df
+
+
 def combine_and_save_dataset(old_show_file: str):
     print("reading old data")
     old_showstats = pd.read_parquet(path=old_show_file)
+    old_showstats = old_showstats.drop(
+        columns=[
+            "eventDate",
+            "artist.name",
+            "venue.name_y",
+            "venue.city.name",
+            "venue.city.state",
+            "venue.city.coords.lat",
+            "venue.city.coords.long",
+            "venue.city.country.name",
+        ]
+    )
 
     print("finding all show dates")
     all_show_dates = get_show_dates(slug_list=slugs)
@@ -169,14 +244,36 @@ def combine_and_save_dataset(old_show_file: str):
         all_tracks, left_on="uuid", right_on="show_uuid", how="left"
     )
 
-    write_df = pd.concat([old_showstats, final_df], axis=0)
+    print("Generating SetlistFM data")
+    billy = get_setlist_fm(mbid="640db492-34c4-47df-be14-96e2cd4b9fe4", headers=headers)
+    goose = get_setlist_fm(mbid="b925a474-d245-4217-bc13-2e153d82bebb", headers=headers)
+    dead = get_setlist_fm(mbid="6faa7ca7-0d99-4a5e-bfa6-1fd5037520c6", headers=headers)
+    wsp = get_setlist_fm(mbid="3797a6d0-7700-44bf-96fb-f44386bc9ab2", headers=headers)
+
+    setlist_fm = pd.concat([billy, goose, dead, wsp], axis=0)
+
+    final_df = pd.concat([old_showstats, final_df], axis=0)
+
+    print("Merging and preparing to write final df")
+    write_df = final_df.merge(
+        setlist_fm,
+        how="left",
+        left_on=["display_date", "artist"],
+        right_on=["eventDate", "artist.name"],
+    )
+
+    print(write_df.columns)
+
+    print("Coalescing venue information")
+    write_df = coalesce_venue_info(write_df)
+    write_df["song_position"] = write_df.groupby(["uuid"]).cumcount()
 
     write_df.to_parquet(
-        path="/Users/brandonmurphy/projects/show_stats/ShowStats/data/showstats.parquet"
+        path="/Users/brandonmurphy/projects/show_stats/ShowStats/data/showstats_update.parquet"
     )
 
 
 if __name__ == "__main__":
     combine_and_save_dataset(
-        old_show_file="/Users/brandonmurphy/projects/show_stats/ShowStats/data/wsp_phish_goose_test_df.parquet"
+        old_show_file="/Users/brandonmurphy/projects/show_stats/ShowStats/data/showstats_update.parquet"
     )
