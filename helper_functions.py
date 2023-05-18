@@ -1,10 +1,6 @@
-import datetime
-import json
 import warnings
 
-import numpy as np
 import pandas as pd
-import requests
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
 
@@ -19,7 +15,7 @@ def create_show_list(df: pd.DataFrame, artist_name: str):
     df_new = df[df["artist"] == artist_name].reset_index(drop=True).copy()
 
     for i in range(len(df_new)):
-        venue = df_new.loc[i, "venue_name"]
+        # venue = df_new.loc[i, "venue_name"]
         date = df_new.loc[i, "display_date"]
         location = df_new.loc[i, "venue_location"]
         uuid = df_new.loc[i, "uuid"]
@@ -31,7 +27,7 @@ def create_show_list(df: pd.DataFrame, artist_name: str):
 color_dict = {
     "Phish": "#00205B",
     "Widespread Panic": "#00843D",
-    "Goose": "#E1F6F4",
+    "Goose": "#E1F6F4",  # a6e4de
     "Grateful Dead": "#A8DDA8",  # 45BCE5
     "Billy Strings": "#779ecb",  # 00C39C 6AC1B8
 }
