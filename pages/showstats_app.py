@@ -4,6 +4,7 @@
 
 import sys
 
+import awswrangler as wr
 import dash
 import dash_ag_grid as dag
 import dash_bootstrap_components as dbc
@@ -13,8 +14,10 @@ from dash import callback, dcc, html
 from dash.dependencies import Input, Output, State
 from dash_bootstrap_templates import load_figure_template
 
-sys.path.insert(0, "/Users/brandonmurphy/projects/show_stats/ShowStats/")
 import helper_functions as hf
+
+sys.path.insert(0, "/Users/brandonmurphy/projects/show_stats/ShowStats/")
+
 
 #######################################
 #            Initialize App           #
@@ -24,9 +27,7 @@ dash.register_page(__name__, path="/", name="ShowStats")
 #######################################
 #            Read in data             #
 #######################################
-my_shows = pd.read_parquet(
-    path="/Users/brandonmurphy/projects/show_stats/ShowStats/data/showstats_update.parquet"
-)
+my_shows = wr.s3.read_parquet("s3://showstats1/showstats_update.parquet")
 
 my_shows = my_shows.reset_index(drop=True)
 
