@@ -214,7 +214,7 @@ layout = dbc.Container(
                         href="https://github.com/bkmurph/ShowStats",
                         children=[
                             html.Img(
-                                src="assets/pngegg.png",
+                                src="https://showstats1.s3.amazonaws.com/assets/pngegg.png",
                                 alt="Link to my GitHub",
                                 height=90,
                                 width=90,
@@ -228,7 +228,7 @@ layout = dbc.Container(
                         href="https://relisten.net/",
                         children=[
                             html.Img(
-                                src="assets/relisten.png",
+                                src="https://showstats1.s3.amazonaws.com/assets/relisten.png",
                                 alt="Data source for much of this site",
                                 height=90,
                                 width=90,
@@ -243,7 +243,7 @@ layout = dbc.Container(
                 dbc.Col(
                     html.Div(
                         html.Img(
-                            src="/assets/coffee.png",
+                            src="https://showstats1.s3.amazonaws.com/assets/coffee.png",
                             height=90,
                             width=90,
                         ),

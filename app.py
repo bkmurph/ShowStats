@@ -35,7 +35,7 @@ app.layout = dbc.Container(
                         html.A(
                             children=[
                                 html.Img(
-                                    src="/assets/shell_transparent.png",
+                                    src="https://showstats1.s3.amazonaws.com/assets/shell_transparent.PNG",
                                     height=220,
                                     width=350,
                                 )
