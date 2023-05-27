@@ -19,3 +19,7 @@
         zoom: 1;
     }
 }
+
+.Select input {
+    color: rgba(18, 17, 17, 0.894);
+}

@@ -8,7 +8,6 @@ import awswrangler as wr
 import dash
 import dash_ag_grid as dag
 import dash_bootstrap_components as dbc
-import pandas as pd
 import plotly.express as px
 from dash import callback, dcc, html
 from dash.dependencies import Input, Output, State
@@ -28,7 +27,6 @@ dash.register_page(__name__, path="/", name="ShowStats")
 #            Read in data             #
 #######################################
 my_shows = wr.s3.read_parquet("s3://showstats1/showstats_update.parquet")
-
 my_shows = my_shows.reset_index(drop=True)
 
 #######################################
@@ -69,7 +67,7 @@ billy_options = hf.create_show_list(unique_shows, "Billy Strings")
 phish_dropdown = dcc.Dropdown(
     id="phish_drop",
     options=phish_options,
-    value=hf.phish_starter_uuids,
+    value=[],
     multi=True,
     searchable=True,
     style={"color": "black"},
@@ -78,7 +76,7 @@ phish_dropdown = dcc.Dropdown(
 panic_dropdown = dcc.Dropdown(
     id="panic_drop",
     options=panic_options,
-    value=hf.panic_starter_uuids,
+    value=[],
     multi=True,
     searchable=True,
     style={"color": "black"},
@@ -87,7 +85,7 @@ panic_dropdown = dcc.Dropdown(
 goose_dropdown = dcc.Dropdown(
     id="goose_drop",
     options=goose_options,
-    value=hf.goose_starter_uuids,
+    value=[],
     multi=True,
     searchable=True,
     style={"color": "black"},
@@ -206,56 +204,6 @@ layout = dbc.Container(
         dbc.Row([song_count], class_name="my-4"),
         html.H2("Locations of Shows You've Been To"),
         dbc.Row([map_shows], class_name="my-4"),
-        html.H2("External Links:"),
-        dbc.Row(
-            [
-                dbc.Col(
-                    html.A(
-                        href="https://github.com/bkmurph/ShowStats",
-                        children=[
-                            html.Img(
-                                src="https://showstats1.s3.amazonaws.com/assets/pngegg.png",
-                                alt="Link to my GitHub",
-                                height=90,
-                                width=90,
-                            )
-                        ],
-                    ),
-                    className="text-center",
-                ),
-                dbc.Col(
-                    html.A(
-                        href="https://relisten.net/",
-                        children=[
-                            html.Img(
-                                src="https://showstats1.s3.amazonaws.com/assets/relisten.png",
-                                alt="Data source for much of this site",
-                                height=90,
-                                width=90,
-                            )
-                        ],
-                    ),
-                    # md=6,
-                    # lg=1
-                    # width={"offset": 3},
-                    className="text-center",
-                ),
-                dbc.Col(
-                    html.Div(
-                        html.Img(
-                            src="https://showstats1.s3.amazonaws.com/assets/coffee.png",
-                            height=90,
-                            width=90,
-                        ),
-                        className="text-center",
-                    ),
-                )
-                # md=6,
-                # lg=1
-            ],
-            className="my-4",
-            justify="center",
-        ),
     ],
 )
 
