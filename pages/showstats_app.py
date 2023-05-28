@@ -71,6 +71,7 @@ phish_dropdown = dcc.Dropdown(
     multi=True,
     searchable=True,
     style={"color": "black"},
+    persistence=True,
 )
 
 panic_dropdown = dcc.Dropdown(
@@ -80,6 +81,7 @@ panic_dropdown = dcc.Dropdown(
     multi=True,
     searchable=True,
     style={"color": "black"},
+    persistence=True,
 )
 
 goose_dropdown = dcc.Dropdown(
@@ -89,6 +91,7 @@ goose_dropdown = dcc.Dropdown(
     multi=True,
     searchable=True,
     style={"color": "black"},
+    persistence=True,
 )
 
 billy_dropdown = dcc.Dropdown(
@@ -98,6 +101,7 @@ billy_dropdown = dcc.Dropdown(
     multi=True,
     searchable=True,
     style={"color": "black"},
+    persistence=True,
 )
 
 dead_dropdown = dcc.Dropdown(
@@ -107,6 +111,7 @@ dead_dropdown = dcc.Dropdown(
     multi=True,
     searchable=True,
     style={"color": "black"},
+    persistence=True,
 )
 
 #######################################

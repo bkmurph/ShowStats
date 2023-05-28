@@ -15,7 +15,7 @@ layout = html.Div(
         As the shows stacked up, as much as I'd like to think I have a good memory (I don't), it's sometimes
         difficult to remember what songs were played where. I always wished there was a tool where I could
         track the specific shows I went to. One day the lightbulb finally went off that I have the
-        skilset to make that happen. This is my attempt at doing just that.
+        skillset to make that happen. This is my attempt at doing just that.
         I think it's pretty cool, hopefully some other people will too.
 
         # How to Use
