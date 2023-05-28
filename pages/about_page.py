@@ -11,7 +11,7 @@ layout = html.Div(
         __________________
         I attended my first Widespread Panic show in Charleston, SC at the Trondossa Festival in 2019.
         Little did I know that would be the start of a new hobby that would lead me to see a bunch of
-        new bands that I would travel to different parts of the country to see.
+        new bands that I would travel to new parts of the country to see.
         As the shows stacked up, as much as I'd like to think I have a good memory (I don't), it's sometimes
         difficult to remember what songs were played where. I always wished there was a tool where I could
         track the specific shows I went to. One day the lightbulb finally went off that I have the
