@@ -92,7 +92,7 @@ layout = html.Div(
                         indivdual setlist entry. While people usually do a good job,
                          there is human error involved in manual data entry. Depending on
                          the show or artist there may be missing song / data / location /
-                          / entire show data.         
+                          / entire show data.     
                         """
                         )
                     ],
@@ -144,8 +144,8 @@ layout = html.Div(
                         continuously added to the site. I don't think this is that hard, I just haven't done it yet.
                         
                         - Refactoring, refactoring, refactoring! Right now the code to run this site
-                        works. However, the perfectionist in me wants the code to be beautiful, and not cause
-                        an aneurysm every time I read back through it.
+                        works. However, the perfectionist in me wants the code clean, compact, and readable.
+                        Right now it is migraine inducing in certain areas.
                         
                         - Allow tap to click on charts. The cool part about the map plot is how you can view
                         metadata about the show if you hover over it. However, this only works

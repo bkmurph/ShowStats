@@ -1,6 +1,6 @@
 import dash
 import dash_bootstrap_components as dbc
-from dash import html
+from dash import dcc, html
 
 app = dash.Dash(
     __name__,
@@ -13,7 +13,7 @@ sidebar = dbc.Nav(
     [
         dbc.NavLink(
             [
-                html.Div(page["name"]),  # className="ms-2"
+                html.Div(page["name"]),
             ],
             href=page["path"],
             active="exact",
@@ -28,6 +28,7 @@ sidebar = dbc.Nav(
 app.layout = dbc.Container(
     [
         html.Br(),
+        dcc.Store(id="store-data", data={}, storage_type="local"),
         dbc.Row(
             [
                 dbc.Col(
