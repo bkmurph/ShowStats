@@ -8,11 +8,12 @@ import awswrangler as wr
 import dash
 import dash_ag_grid as dag
 import dash_bootstrap_components as dbc
-import pandas as pd
 import plotly.express as px
-from dash import callback, dcc, html
-from dash.dependencies import Input, Output, State
+
+# from dash import callback, dcc, html
+# from dash.dependencies import Input, Output, State
 from dash_bootstrap_templates import load_figure_template
+from dash_extensions.enrich import Input, Output, Serverside, State, callback, dcc, html
 
 import helper_functions as hf
 
@@ -227,6 +228,7 @@ layout = dbc.Container(
         State("billy_drop", "value"),
         State("dead_drop", "value"),
     ],
+    prevent_initial_call=True,
 )
 def store_data(
     n_clicks, data, phish_uuids, wsp_uuids, goose_uuids, billy_uuids, dead_uuids
@@ -234,20 +236,21 @@ def store_data(
     my_uuids = phish_uuids + wsp_uuids + goose_uuids + billy_uuids + dead_uuids
     my_shows = wr.s3.read_parquet("s3://showstats1/showstats_update1.parquet")
     my_shows = my_shows[my_shows["uuid"].isin(my_uuids)].copy()
-    my_shows = my_shows.reset_index(drop=True).to_json(orient="split")
+    # my_shows = my_shows.reset_index(drop=True).to_json(orient="split")
 
-    return my_shows
+    return Serverside(my_shows)
 
 
 @callback(
     Output("line_chart", "figure"),
     [Input("submit_button", "n_clicks"), Input("store-data", "data")],
+    prevent_initial_call=True,
 )
 def update_show_counts(
     n_clicks,
     data,
 ):
-    data = pd.read_json(data, orient="split")
+    # data = pd.read_json(data, orient="split")
     shows_by_year = (
         data.groupby(["year.year", "artist"])["uuid"]
         .nunique()
@@ -278,9 +281,10 @@ def update_show_counts(
 @callback(
     Output("unique_", "figure"),
     [Input("submit_button", "n_clicks"), Input("store-data", "data")],
+    prevent_initial_call=True,
 )
 def update_unique_songs(n_clicks, my_shows):
-    my_shows = pd.read_json(my_shows, orient="split")
+    # my_shows = pd.read_json(my_shows, orient="split")
     unique_songs = my_shows.groupby(["artist"])["title"].nunique().reset_index().copy()
 
     unique_bar = px.bar(
@@ -302,9 +306,10 @@ def update_unique_songs(n_clicks, my_shows):
 @callback(
     Output("concert_map", "figure"),
     [Input("submit_button", "n_clicks"), Input("store-data", "data")],
+    prevent_initial_call=True,
 )
 def update_scatter_mapbox(n_clicks, my_shows):
-    my_shows = pd.read_json(my_shows, orient="split")
+    # my_shows = pd.read_json(my_shows, orient="split")
     map_data = my_shows.reset_index().copy()
     map_data = hf.convert_seconds_to_hms(map_data, "avg_duration")
     map_data = map_data[~map_data["latitude"].isna()].reset_index().copy()
@@ -353,14 +358,15 @@ def update_scatter_mapbox(n_clicks, my_shows):
 @callback(
     Output("songs_bar", "figure"),
     [Input("submit_button", "n_clicks"), Input("store-data", "data")],
+    prevent_initial_call=True,
 )
 def update_top_songs(n_clicks, my_shows):
-    my_shows = pd.read_json(my_shows, orient="split")
+    # my_shows = pd.read_json(my_shows, orient="split")
     song_counts = (
         my_shows.groupby(["artist", "title"])["slug"]
         .count()
         .reset_index()
-        .sort_values("slug", ascending=False)
+        .sort_values(["slug", "title", "artist"], ascending=False)
         .rename(columns={"slug": "times_heard"})
         .head(15)
         .copy()
@@ -391,9 +397,10 @@ def update_top_songs(n_clicks, my_shows):
     Output("test_table", "rowData"),
     Output("test_table", "columnDefs"),
     [Input("submit_button", "n_clicks"), Input("store-data", "data")],
+    prevent_initial_call=True,
 )
 def update_longest_jams(n_clicks, my_shows):
-    my_shows = pd.read_json(my_shows, orient="split")
+    # my_shows = pd.read_json(my_shows, orient="split")
     longest_jams = (
         my_shows.sort_values("duration", ascending=False)
         .assign(
