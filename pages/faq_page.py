@@ -144,7 +144,7 @@ layout = html.Div(
                         continuously added to the site. I don't think this is that hard, I just haven't done it yet.
                         
                         - Refactoring, refactoring, refactoring! Right now the code to run this site
-                        works. However, the perfectionist in me wants the code clean, compact, and readable.
+                        works. However, the perfectionist in me wants the code to be clean, compact, and readable.
                         Right now it is migraine inducing in certain areas.
                         
                         - Allow tap to click on charts. The cool part about the map plot is how you can view

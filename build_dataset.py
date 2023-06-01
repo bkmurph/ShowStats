@@ -28,6 +28,22 @@ artist_id_mapping = {
     9: "Grateful Dead",
 }
 
+write_cols = [
+    "uuid",
+    "date",
+    "display_date",
+    "year.year",
+    "artist",
+    "title",
+    "duration",
+    "avg_duration",
+    "latitude",
+    "longitude",
+    "slug",
+    "venue_location",
+    "venue_name",
+]
+
 
 def get_show_dates(slug_list: list[str]):
     show_dates = []
@@ -81,7 +97,6 @@ def get_uuid_list(show_date_df: pd.DataFrame):
 
 
 def get_new_uuids(old_df: str, new_uuids: list[str]):
-
     df = pd.read_parquet(path=old_df)
     old_uuids = set(df["uuid"])
 
@@ -150,7 +165,6 @@ def get_show_songs(uuid_list=list[str]):
 
 
 def get_setlist_fm(mbid=list[str], headers=dict()):
-
     base_url = f"https://api.setlist.fm/rest/1.0/artist/{mbid}/setlists?"
     request = requests.get(base_url, headers=headers)
     find_num_pages = pd.json_normalize(request.json())
@@ -212,12 +226,12 @@ def combine_and_save_dataset(old_show_file: str):
         columns=[
             "eventDate",
             "artist.name",
-            "venue.name_y",
             "venue.city.name",
             "venue.city.state",
             "venue.city.coords.lat",
             "venue.city.coords.long",
             "venue.city.country.name",
+            "venue_sfm",
         ]
     )
 
@@ -268,8 +282,10 @@ def combine_and_save_dataset(old_show_file: str):
     write_df = coalesce_venue_info(write_df)
     write_df["song_position"] = write_df.groupby(["uuid"]).cumcount()
 
+    write_df = write_df[write_cols].copy()
+
     write_df.to_parquet(
-        path="/Users/brandonmurphy/projects/show_stats/ShowStats/data/showstats_update.parquet"
+        path="/Users/brandonmurphy/projects/show_stats/ShowStats/data/showstats_update1.parquet"
     )
 
 

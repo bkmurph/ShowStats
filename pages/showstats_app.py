@@ -27,7 +27,7 @@ dash.register_page(__name__, path="/", name="ShowStats")
 #######################################
 #            Read in data             #
 #######################################
-shows = wr.s3.read_parquet("s3://showstats1/showstats_update.parquet")
+shows = wr.s3.read_parquet("s3://showstats1/showstats_update1.parquet")
 shows = shows.reset_index(drop=True)
 
 #######################################
@@ -232,7 +232,7 @@ def store_data(
     n_clicks, data, phish_uuids, wsp_uuids, goose_uuids, billy_uuids, dead_uuids
 ):
     my_uuids = phish_uuids + wsp_uuids + goose_uuids + billy_uuids + dead_uuids
-    my_shows = wr.s3.read_parquet("s3://showstats1/showstats_update.parquet")
+    my_shows = wr.s3.read_parquet("s3://showstats1/showstats_update1.parquet")
     my_shows = my_shows[my_shows["uuid"].isin(my_uuids)].copy()
     my_shows = my_shows.reset_index(drop=True).to_json(orient="split")
 
