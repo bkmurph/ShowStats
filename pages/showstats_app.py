@@ -9,9 +9,7 @@ import dash
 import dash_ag_grid as dag
 import dash_bootstrap_components as dbc
 import plotly.express as px
-
-# from dash import callback, dcc, html
-# from dash.dependencies import Input, Output, State
+from dash import Patch
 from dash_bootstrap_templates import load_figure_template
 from dash_extensions.enrich import Input, Output, Serverside, State, callback, dcc, html
 
@@ -219,8 +217,8 @@ layout = dbc.Container(
 
 
 @callback(
-    Output("store-data", "data"),
-    [Input("submit_button", "n_clicks"), Input("store-data", "data")],
+    Output("line_chart", "figure"),
+    [Input("submit_button", "n_clicks")],
     [
         State("phish_drop", "value"),
         State("panic_drop", "value"),
@@ -228,29 +226,14 @@ layout = dbc.Container(
         State("billy_drop", "value"),
         State("dead_drop", "value"),
     ],
-    prevent_initial_call=True,
-)
-def store_data(
-    n_clicks, data, phish_uuids, wsp_uuids, goose_uuids, billy_uuids, dead_uuids
-):
-    my_uuids = phish_uuids + wsp_uuids + goose_uuids + billy_uuids + dead_uuids
-    my_shows = wr.s3.read_parquet("s3://showstats1/showstats_update1.parquet")
-    my_shows = my_shows[my_shows["uuid"].isin(my_uuids)].copy()
-    # my_shows = my_shows.reset_index(drop=True).to_json(orient="split")
-
-    return Serverside(my_shows)
-
-
-@callback(
-    Output("line_chart", "figure"),
-    [Input("submit_button", "n_clicks"), Input("store-data", "data")],
-    prevent_initial_call=True,
+    prevent_initial_call=False,
 )
 def update_show_counts(
-    n_clicks,
-    data,
+    n_clicks, phish_uuids, wsp_uuids, goose_uuids, billy_uuids, dead_uuids
 ):
-    # data = pd.read_json(data, orient="split")
+    data = hf.filter_dataset(
+        shows, phish_uuids, wsp_uuids, goose_uuids, billy_uuids, dead_uuids
+    )
     shows_by_year = (
         data.groupby(["year.year", "artist"])["uuid"]
         .nunique()
@@ -280,11 +263,22 @@ def update_show_counts(
 
 @callback(
     Output("unique_", "figure"),
-    [Input("submit_button", "n_clicks"), Input("store-data", "data")],
-    prevent_initial_call=True,
+    [Input("submit_button", "n_clicks")],
+    [
+        State("phish_drop", "value"),
+        State("panic_drop", "value"),
+        State("goose_drop", "value"),
+        State("billy_drop", "value"),
+        State("dead_drop", "value"),
+    ],
+    prevent_initial_call=False,
 )
-def update_unique_songs(n_clicks, my_shows):
-    # my_shows = pd.read_json(my_shows, orient="split")
+def update_unique_songs(
+    n_clicks, phish_uuids, wsp_uuids, goose_uuids, billy_uuids, dead_uuids
+):
+    my_shows = hf.filter_dataset(
+        shows, phish_uuids, wsp_uuids, goose_uuids, billy_uuids, dead_uuids
+    )
     unique_songs = my_shows.groupby(["artist"])["title"].nunique().reset_index().copy()
 
     unique_bar = px.bar(
@@ -305,11 +299,22 @@ def update_unique_songs(n_clicks, my_shows):
 
 @callback(
     Output("concert_map", "figure"),
-    [Input("submit_button", "n_clicks"), Input("store-data", "data")],
-    prevent_initial_call=True,
+    [Input("submit_button", "n_clicks")],
+    [
+        State("phish_drop", "value"),
+        State("panic_drop", "value"),
+        State("goose_drop", "value"),
+        State("billy_drop", "value"),
+        State("dead_drop", "value"),
+    ],
+    prevent_initial_call=False,
 )
-def update_scatter_mapbox(n_clicks, my_shows):
-    # my_shows = pd.read_json(my_shows, orient="split")
+def update_scatter_mapbox(
+    n_clicks, phish_uuids, wsp_uuids, goose_uuids, billy_uuids, dead_uuids
+):
+    my_shows = hf.filter_dataset(
+        shows, phish_uuids, wsp_uuids, goose_uuids, billy_uuids, dead_uuids
+    )
     map_data = my_shows.reset_index().copy()
     map_data = hf.convert_seconds_to_hms(map_data, "avg_duration")
     map_data = map_data[~map_data["latitude"].isna()].reset_index().copy()
@@ -357,11 +362,22 @@ def update_scatter_mapbox(n_clicks, my_shows):
 
 @callback(
     Output("songs_bar", "figure"),
-    [Input("submit_button", "n_clicks"), Input("store-data", "data")],
-    prevent_initial_call=True,
+    [Input("submit_button", "n_clicks")],
+    [
+        State("phish_drop", "value"),
+        State("panic_drop", "value"),
+        State("goose_drop", "value"),
+        State("billy_drop", "value"),
+        State("dead_drop", "value"),
+    ],
+    prevent_initial_call=False,
 )
-def update_top_songs(n_clicks, my_shows):
-    # my_shows = pd.read_json(my_shows, orient="split")
+def update_top_songs(
+    n_clicks, phish_uuids, wsp_uuids, goose_uuids, billy_uuids, dead_uuids
+):
+    my_shows = hf.filter_dataset(
+        shows, phish_uuids, wsp_uuids, goose_uuids, billy_uuids, dead_uuids
+    )
     song_counts = (
         my_shows.groupby(["artist", "title"])["slug"]
         .count()
@@ -396,11 +412,22 @@ def update_top_songs(n_clicks, my_shows):
 @callback(
     Output("test_table", "rowData"),
     Output("test_table", "columnDefs"),
-    [Input("submit_button", "n_clicks"), Input("store-data", "data")],
-    prevent_initial_call=True,
+    [Input("submit_button", "n_clicks")],
+    [
+        State("phish_drop", "value"),
+        State("panic_drop", "value"),
+        State("goose_drop", "value"),
+        State("billy_drop", "value"),
+        State("dead_drop", "value"),
+    ],
+    prevent_initial_call=False,
 )
-def update_longest_jams(n_clicks, my_shows):
-    # my_shows = pd.read_json(my_shows, orient="split")
+def update_longest_jams(
+    n_clicks, phish_uuids, wsp_uuids, goose_uuids, billy_uuids, dead_uuids
+):
+    my_shows = hf.filter_dataset(
+        shows, phish_uuids, wsp_uuids, goose_uuids, billy_uuids, dead_uuids
+    )
     longest_jams = (
         my_shows.sort_values("duration", ascending=False)
         .assign(

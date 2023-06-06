@@ -29,7 +29,7 @@ sidebar = dbc.Nav(
 app.layout = dbc.Container(
     [
         html.Br(),
-        dcc.Loading(dcc.Store(id="store-data", data={}), fullscreen=False, type="dot"),
+        # dcc.Loading(dcc.Store(id="store-data", data={}), fullscreen=False, type="dot"),
         dbc.Row(
             [
                 dbc.Col(

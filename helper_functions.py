@@ -10,6 +10,14 @@ def convert_seconds_to_hms(df, column):
     return df
 
 
+def filter_dataset(df, phish_uuids, wsp_uuids, goose_uuids, billy_uuids, dead_uuids):
+    uuids = phish_uuids + wsp_uuids + goose_uuids + billy_uuids + dead_uuids
+
+    df_filtered = df[df["uuid"].isin(uuids)].copy()
+
+    return df_filtered
+
+
 def create_show_list(df: pd.DataFrame, artist_name: str):
     show_list = []
     df_new = df[df["artist"] == artist_name].reset_index(drop=True).copy()
