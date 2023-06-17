@@ -1,12 +1,12 @@
 import dash
 import dash_bootstrap_components as dbc
-from dash_extensions.enrich import DashProxy, ServersideOutputTransform, dcc, html
+from dash import Dash, html
 
-app = DashProxy(
+app = Dash(
     __name__,
     use_pages=True,
     external_stylesheets=[dbc.themes.SLATE],
-    transforms=[ServersideOutputTransform()],
+    suppress_callback_exceptions=True,
 )
 server = app.server
 
@@ -29,7 +29,6 @@ sidebar = dbc.Nav(
 app.layout = dbc.Container(
     [
         html.Br(),
-        # dcc.Loading(dcc.Store(id="store-data", data={}), fullscreen=False, type="dot"),
         dbc.Row(
             [
                 dbc.Col(

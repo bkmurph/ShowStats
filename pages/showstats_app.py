@@ -9,14 +9,12 @@ import dash
 import dash_ag_grid as dag
 import dash_bootstrap_components as dbc
 import plotly.express as px
-from dash import Patch
+from dash import Input, Output, State, callback, dcc, html
 from dash_bootstrap_templates import load_figure_template
-from dash_extensions.enrich import Input, Output, Serverside, State, callback, dcc, html
 
 import helper_functions as hf
 
 sys.path.insert(0, "/Users/brandonmurphy/projects/show_stats/ShowStats/")
-
 
 #######################################
 #            Initialize App           #
@@ -26,7 +24,7 @@ dash.register_page(__name__, path="/", name="ShowStats")
 #######################################
 #            Read in data             #
 #######################################
-shows = wr.s3.read_parquet("s3://showstats1/showstats_update1.parquet")
+shows = wr.s3.read_parquet("s3://showstats1/showstats_update_new.parquet")
 shows = shows.reset_index(drop=True)
 
 #######################################
@@ -34,6 +32,17 @@ shows = shows.reset_index(drop=True)
 #######################################
 
 load_figure_template("slate")
+
+
+#########################################
+#            Read in Drop Downs         #
+#########################################
+
+phish_options = hf.get_s3_object("phish")
+panic_options = hf.get_s3_object("wsp")
+goose_options = hf.get_s3_object("goose")
+gd_options = hf.get_s3_object("dead")
+billy_options = hf.get_s3_object("billy")
 
 
 # Header Components
@@ -51,18 +60,6 @@ nav_dropdown = dbc.DropdownMenu(
         dbc.DropdownMenuItem("Item 3"),
     ],
 )
-
-unique_shows = (
-    shows.drop_duplicates(subset=["uuid"])
-    .sort_values("date", ascending=False)
-    .reset_index()
-)
-
-phish_options = hf.create_show_list(unique_shows, "Phish")
-panic_options = hf.create_show_list(unique_shows, "Widespread Panic")
-goose_options = hf.create_show_list(unique_shows, "Goose")
-gd_options = hf.create_show_list(unique_shows, "Grateful Dead")
-billy_options = hf.create_show_list(unique_shows, "Billy Strings")
 
 phish_dropdown = dcc.Dropdown(
     id="phish_drop",
@@ -235,25 +232,25 @@ def update_show_counts(
         shows, phish_uuids, wsp_uuids, goose_uuids, billy_uuids, dead_uuids
     )
     shows_by_year = (
-        data.groupby(["year.year", "artist"])["uuid"]
+        data.groupby(["year_prod", "artist_prod"])["uuid"]
         .nunique()
         .reset_index()
-        .sort_values(by=["year.year", "artist"])
+        .sort_values(by=["year_prod", "artist_prod"])
     )
-    year_order = shows_by_year["year.year"].sort_values(ascending=True).unique()
+    year_order = shows_by_year["year_prod"].sort_values(ascending=True).unique()
     category_order = {
-        "year.year": year_order,
-        "artist": ["Goose", "Phish", "Widespread Panic"],
+        "year_prod": year_order,
+        "artist_prod": ["Goose", "Phish", "Widespread Panic"],
     }
     line_chart = px.line(
         data_frame=shows_by_year,
-        x="year.year",
+        x="year_prod",
         y="uuid",
-        color="artist",
+        color="artist_prod",
         color_discrete_map=hf.color_dict,
         markers=True,
         category_orders=category_order,
-        labels={"year.year": "Year", "uuid": "Show Count", "artist": "Artist"},
+        labels={"year_prod": "Year", "uuid": "Show Count", "artist_prod": "Artist"},
     )
 
     line_chart.update_layout(legend_orientation="h", xaxis_title=None)
@@ -279,17 +276,23 @@ def update_unique_songs(
     my_shows = hf.filter_dataset(
         shows, phish_uuids, wsp_uuids, goose_uuids, billy_uuids, dead_uuids
     )
-    unique_songs = my_shows.groupby(["artist"])["title"].nunique().reset_index().copy()
+    unique_songs = (
+        my_shows.dropna(subset=["song.name"])
+        .groupby(["artist_prod"])["song.name"]
+        .nunique()
+        .reset_index()
+        .copy()
+    )
 
     unique_bar = px.bar(
         data_frame=unique_songs,
-        x="artist",
-        y="title",
-        color="artist",
+        x="artist_prod",
+        y="song.name",
+        color="artist_prod",
         color_discrete_map=hf.color_dict,
         category_orders=hf.category_orders,
-        text="title",
-        labels={"artist": "Artist", "title": "Unique Songs Seen"},
+        text="song.name",
+        labels={"artist_prod": "Artist", "song.name": "Unique Songs Seen"},
     )
     unique_bar.update_traces(textposition="outside")
     unique_bar.update_layout(showlegend=False, xaxis_title=None)
@@ -315,17 +318,22 @@ def update_scatter_mapbox(
     my_shows = hf.filter_dataset(
         shows, phish_uuids, wsp_uuids, goose_uuids, billy_uuids, dead_uuids
     )
-    map_data = my_shows.reset_index().copy()
+    map_data = my_shows.reset_index(drop=True).copy()
     map_data = hf.convert_seconds_to_hms(map_data, "avg_duration")
-    map_data = map_data[~map_data["latitude"].isna()].reset_index().copy()
+    map_data = (
+        map_data[~map_data["latitude"].isna()]
+        .reset_index(drop=True)
+        .drop_duplicates(subset=["uuid", "latitude", "longitude"])
+        .copy()
+    )
 
     show_map = px.scatter_mapbox(
         data_frame=map_data,
         lat="latitude",
         lon="longitude",
-        hover_name="artist",
+        hover_name="artist_prod",
         hover_data=["venue_name", "venue_location", "display_date", "duration_hms"],
-        color="artist",
+        color="artist_prod",
         color_discrete_map={
             "Phish": "#00205B",
             "Widespread Panic": "#00843D",
@@ -343,8 +351,8 @@ def update_scatter_mapbox(
             "venue_location": "Location",
             "latitude": "Latitude",
             "longitude": "Longitude",
-            "artist": "Artist",
-            "display_date": "Date",
+            "artist_prod": "Artist",
+            "date_prod": "Date",
             "duration_hms": "Show Time",
         },
     )
@@ -379,11 +387,11 @@ def update_top_songs(
         shows, phish_uuids, wsp_uuids, goose_uuids, billy_uuids, dead_uuids
     )
     song_counts = (
-        my_shows.groupby(["artist", "title"])["slug"]
+        my_shows.groupby(["artist_prod", "song.name"])["date_prod"]
         .count()
         .reset_index()
-        .sort_values(["slug", "title", "artist"], ascending=False)
-        .rename(columns={"slug": "times_heard"})
+        .sort_values(["date_prod", "artist_prod", "song.name"], ascending=False)
+        .rename(columns={"date_prod": "times_heard"})
         .head(15)
         .copy()
     )
@@ -391,12 +399,12 @@ def update_top_songs(
     top_songs = px.bar(
         data_frame=song_counts,
         x="times_heard",
-        y="title",
-        color="artist",
+        y="song.name",
+        color="artist_prod",
         color_discrete_map=hf.color_dict,
         category_orders=hf.category_orders,
         text="times_heard",
-        labels={"title": "", "times_heard": "Number Times Seen", "artist": "Artist"},
+        labels={"song.name": "", "times_heard": "", "artist_prod": "Artist"},
     )
     top_songs.update_layout(
         yaxis={"categoryorder": "total ascending"},
