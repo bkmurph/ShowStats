@@ -190,7 +190,7 @@ layout = dbc.Container(
         h3_,
         dbc.Row(
             [
-                dbc.Col(accordion),
+                dcc.Loading(dbc.Col(accordion)),
             ],
             class_name="my-4",
         ),
