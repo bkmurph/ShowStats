@@ -72,3 +72,44 @@ color_dict = {
 category_orders = {
     "artist": ["Billy Strings", "Goose", "Grateful Dead", "Phish", "Widespread Panic"]
 }
+
+slugs = [
+    "grateful-dead",
+    "phish",
+    "billy-strings",
+    "goose",
+    "wsp",
+]
+
+headers = {
+    "Accept": "application/json",
+    "x-api-key": "Obo7MA1IRsf4nb4mSpOYuei5L6viXmLzYd8E",
+}
+
+artist_id_mapping = {
+    5: "Widespread Panic",
+    4: "Phish",
+    259: "Goose",
+    202: "Billy Strings",
+    9: "Grateful Dead",
+}
+
+write_cols = [
+    "uuid",
+    "display_date",
+    "year.year",
+    "artist",
+    "title",
+    "duration",
+    "avg_duration",
+    "latitude",
+    "longitude",
+    "venue_location",
+    "venue_name",
+    "eventDate",
+    "artist.name",
+    "song.name",
+    "date_prod",
+    "year_prod",
+    "artist_prod",
+]
