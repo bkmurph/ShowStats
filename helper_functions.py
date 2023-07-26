@@ -48,9 +48,9 @@ def create_show_list(df: pd.DataFrame, artist_name: str):
         .reset_index(drop=True)
         .copy()
     )
-    df_new["date_prod"] = (
-        df_new[["display_date", "eventDate"]].bfill(axis=1).iloc[:, 0].copy()
-    )
+    # df_new["date_prod"] = (
+    #     df_new[["display_date", "eventDate"]].bfill(axis=1).iloc[:, 0].copy()
+    # )
 
     for i in range(len(df_new)):
         date = df_new.loc[i, "date_prod"]
