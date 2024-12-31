@@ -3,11 +3,10 @@ import time
 import warnings
 
 import awswrangler as wr
+import helper_functions as hf
 import numpy as np
 import pandas as pd
 import requests
-
-import helper_functions as hf
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
 
@@ -60,7 +59,7 @@ def get_show_dates(slug_list: list[str]):
     for slug in slug_list:
         print(slug)
         # Find the years that a band has been active (based on relisten.net reference)
-        url = f"https://relistenapi.alecgorge.com/api/v2/artists/{slug}/years"
+        url = f"https://api.relisten.net/api/v2/artists/{slug}/years"
         response = requests.get(url)
         years = pd.json_normalize(response.json())
         active_years = years["year"].unique()
@@ -68,7 +67,7 @@ def get_show_dates(slug_list: list[str]):
         # Find the dates of shows within each of the years returned from above
         for year in active_years:
             url_years = (
-                f"https://relistenapi.alecgorge.com/api/v2/artists/{slug}/years/{year}"
+                f"https://api.relisten.net/api/v2/artists/{slug}/years/{year}"
             )
             response = requests.get(url_years)
             years = pd.json_normalize(response.json(), record_path=["shows"])
@@ -124,7 +123,7 @@ def get_show_songs(uuid_list=list[str]):
     setlist_tracks = []
     for show_uuid in uuid_list:
         # Make API call, and flatten dataframe
-        url = f"https://relistenapi.alecgorge.com/api/v3/shows/{show_uuid}"
+        url = f"https://api.relisten.net/api/v3/shows/{show_uuid}"
         response = requests.get(url)
         show_json = response.json()
         show_records = pd.json_normalize(
