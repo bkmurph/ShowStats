@@ -2,6 +2,16 @@ venv
 *.pyc
 .DS_Store
 .env
-.pyc
-.DS_Store
 .ipynb_checkpoints
+
+# Data files
+data/
+*.parquet
+*.csv
+
+# Tests
+.pytest_cache/
+
+# Package build
+*.egg-info/
+dist/

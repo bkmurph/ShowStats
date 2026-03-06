@@ -2,8 +2,6 @@
 #               Imports               #
 #######################################
 
-import sys
-
 import awswrangler as wr
 import dash
 import dash_ag_grid as dag
@@ -12,9 +10,7 @@ import plotly.express as px
 from dash import Input, Output, State, callback, dcc, html
 from dash_bootstrap_templates import load_figure_template
 
-import helper_functions as hf
-
-sys.path.insert(0, "/Users/brandonmurphy/projects/show_stats/ShowStats/")
+from showstats import utils as hf
 
 #######################################
 #            Initialize App           #
