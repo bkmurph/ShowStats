@@ -4,22 +4,20 @@ import warnings
 import boto3
 import pandas as pd
 
+from showstats.config import ARTIST_ID_MAPPING, ARTIST_SLUGS, S3_BUCKET, SETLIST_FM_HEADERS, WRITE_COLS
+
 warnings.simplefilter(action="ignore", category=FutureWarning)
 
 s3 = boto3.client("s3")
 
 
 def json_to_s3(json_file, artist: str):
-    # s3 = boto3.client("s3")
-    s3.put_object(Body=json.dumps(json_file), Bucket="showstats1", Key=f"{artist}_uuids.json")
+    s3.put_object(Body=json.dumps(json_file), Bucket=S3_BUCKET, Key=f"{artist}_uuids.json")
 
 
 def get_s3_object(artist: str):
-    content_object = s3.get_object(Bucket="showstats1", Key=artist + "_uuids.json")["Body"].read().decode("utf-8")
-
-    dropdown_list = json.loads(content_object)
-
-    return dropdown_list
+    content_object = s3.get_object(Bucket=S3_BUCKET, Key=artist + "_uuids.json")["Body"].read().decode("utf-8")
+    return json.loads(content_object)
 
 
 def convert_seconds_to_hms(df, column):
@@ -29,24 +27,17 @@ def convert_seconds_to_hms(df, column):
 
 def filter_dataset(df, phish_uuids, wsp_uuids, goose_uuids, billy_uuids, dead_uuids):
     uuids = phish_uuids + wsp_uuids + goose_uuids + billy_uuids + dead_uuids
-
-    df_filtered = df[df["uuid"].isin(uuids)].copy()
-
-    return df_filtered
+    return df[df["uuid"].isin(uuids)].copy()
 
 
 def create_show_list(df: pd.DataFrame, artist_name: str):
     show_list = []
     df_new = df[(df["artist"] == artist_name) | (df["artist.name"] == artist_name)].reset_index(drop=True).copy()
-    # df_new["date_prod"] = (
-    #     df_new[["display_date", "eventDate"]].bfill(axis=1).iloc[:, 0].copy()
-    # )
 
     for i in range(len(df_new)):
         date = df_new.loc[i, "date_prod"]
         location = df_new.loc[i, "venue_location"]
         uuid = df_new.loc[i, "uuid"]
-
         show_list.append({"label": f"{date} / {location}", "value": uuid})
     return show_list
 
@@ -54,50 +45,15 @@ def create_show_list(df: pd.DataFrame, artist_name: str):
 color_dict = {
     "Phish": "#00205B",
     "Widespread Panic": "#00843D",
-    "Goose": "#E1F6F4",  # a6e4de
-    "Grateful Dead": "#A8DDA8",  # 45BCE5
-    "Billy Strings": "#779ecb",  # 00C39C 6AC1B8
+    "Goose": "#E1F6F4",
+    "Grateful Dead": "#A8DDA8",
+    "Billy Strings": "#779ecb",
 }
 
 category_orders = {"artist": ["Billy Strings", "Goose", "Grateful Dead", "Phish", "Widespread Panic"]}
 
-slugs = [
-    "grateful-dead",
-    "phish",
-    "billy-strings",
-    "goose",
-    "wsp",
-]
-
-headers = {
-    "Accept": "application/json",
-    "x-api-key": "Obo7MA1IRsf4nb4mSpOYuei5L6viXmLzYd8E",
-}
-
-artist_id_mapping = {
-    5: "Widespread Panic",
-    4: "Phish",
-    259: "Goose",
-    202: "Billy Strings",
-    9: "Grateful Dead",
-}
-
-write_cols = [
-    "uuid",
-    "display_date",
-    "year.year",
-    "artist",
-    "title",
-    "duration",
-    "avg_duration",
-    "latitude",
-    "longitude",
-    "venue_location",
-    "venue_name",
-    "eventDate",
-    "artist.name",
-    "song.name",
-    "date_prod",
-    "year_prod",
-    "artist_prod",
-]
+# Re-exported for modules that import these from utils
+headers = SETLIST_FM_HEADERS
+slugs = ARTIST_SLUGS
+artist_id_mapping = ARTIST_ID_MAPPING
+write_cols = WRITE_COLS
