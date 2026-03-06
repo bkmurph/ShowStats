@@ -221,12 +221,8 @@ layout = dbc.Container(
     ],
     prevent_initial_call=False,
 )
-def update_show_counts(
-    n_clicks, phish_uuids, wsp_uuids, goose_uuids, billy_uuids, dead_uuids
-):
-    data = hf.filter_dataset(
-        shows, phish_uuids, wsp_uuids, goose_uuids, billy_uuids, dead_uuids
-    )
+def update_show_counts(n_clicks, phish_uuids, wsp_uuids, goose_uuids, billy_uuids, dead_uuids):
+    data = hf.filter_dataset(shows, phish_uuids, wsp_uuids, goose_uuids, billy_uuids, dead_uuids)
     shows_by_year = (
         data.groupby(["year_prod", "artist_prod"])["uuid"]
         .nunique()
@@ -266,18 +262,10 @@ def update_show_counts(
     ],
     prevent_initial_call=False,
 )
-def update_unique_songs(
-    n_clicks, phish_uuids, wsp_uuids, goose_uuids, billy_uuids, dead_uuids
-):
-    my_shows = hf.filter_dataset(
-        shows, phish_uuids, wsp_uuids, goose_uuids, billy_uuids, dead_uuids
-    )
+def update_unique_songs(n_clicks, phish_uuids, wsp_uuids, goose_uuids, billy_uuids, dead_uuids):
+    my_shows = hf.filter_dataset(shows, phish_uuids, wsp_uuids, goose_uuids, billy_uuids, dead_uuids)
     unique_songs = (
-        my_shows.dropna(subset=["song.name"])
-        .groupby(["artist_prod"])["song.name"]
-        .nunique()
-        .reset_index()
-        .copy()
+        my_shows.dropna(subset=["song.name"]).groupby(["artist_prod"])["song.name"].nunique().reset_index().copy()
     )
 
     unique_bar = px.bar(
@@ -308,12 +296,8 @@ def update_unique_songs(
     ],
     prevent_initial_call=False,
 )
-def update_scatter_mapbox(
-    n_clicks, phish_uuids, wsp_uuids, goose_uuids, billy_uuids, dead_uuids
-):
-    my_shows = hf.filter_dataset(
-        shows, phish_uuids, wsp_uuids, goose_uuids, billy_uuids, dead_uuids
-    )
+def update_scatter_mapbox(n_clicks, phish_uuids, wsp_uuids, goose_uuids, billy_uuids, dead_uuids):
+    my_shows = hf.filter_dataset(shows, phish_uuids, wsp_uuids, goose_uuids, billy_uuids, dead_uuids)
     map_data = my_shows.reset_index(drop=True).copy()
     map_data = hf.convert_seconds_to_hms(map_data, "avg_duration")
     map_data = (
@@ -376,12 +360,8 @@ def update_scatter_mapbox(
     ],
     prevent_initial_call=False,
 )
-def update_top_songs(
-    n_clicks, phish_uuids, wsp_uuids, goose_uuids, billy_uuids, dead_uuids
-):
-    my_shows = hf.filter_dataset(
-        shows, phish_uuids, wsp_uuids, goose_uuids, billy_uuids, dead_uuids
-    )
+def update_top_songs(n_clicks, phish_uuids, wsp_uuids, goose_uuids, billy_uuids, dead_uuids):
+    my_shows = hf.filter_dataset(shows, phish_uuids, wsp_uuids, goose_uuids, billy_uuids, dead_uuids)
     song_counts = (
         my_shows.groupby(["artist_prod", "song.name"])["date_prod"]
         .count()
@@ -426,19 +406,11 @@ def update_top_songs(
     ],
     prevent_initial_call=False,
 )
-def update_longest_jams(
-    n_clicks, phish_uuids, wsp_uuids, goose_uuids, billy_uuids, dead_uuids
-):
-    my_shows = hf.filter_dataset(
-        shows, phish_uuids, wsp_uuids, goose_uuids, billy_uuids, dead_uuids
-    )
+def update_longest_jams(n_clicks, phish_uuids, wsp_uuids, goose_uuids, billy_uuids, dead_uuids):
+    my_shows = hf.filter_dataset(shows, phish_uuids, wsp_uuids, goose_uuids, billy_uuids, dead_uuids)
     longest_jams = (
         my_shows.sort_values("duration", ascending=False)
-        .assign(
-            duration_hms=my_shows["duration"]
-            .astype("datetime64[s]")
-            .dt.strftime("%M:%S")
-        )
+        .assign(duration_hms=my_shows["duration"].astype("datetime64[s]").dt.strftime("%M:%S"))
         .assign(minutes=round(my_shows["duration"] / 60, 2))
         .rename(
             columns={

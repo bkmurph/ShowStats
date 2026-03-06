@@ -11,17 +11,11 @@ s3 = boto3.client("s3")
 
 def json_to_s3(json_file, artist: str):
     # s3 = boto3.client("s3")
-    s3.put_object(
-        Body=json.dumps(json_file), Bucket="showstats1", Key=f"{artist}_uuids.json"
-    )
+    s3.put_object(Body=json.dumps(json_file), Bucket="showstats1", Key=f"{artist}_uuids.json")
 
 
 def get_s3_object(artist: str):
-    content_object = (
-        s3.get_object(Bucket="showstats1", Key=artist + "_uuids.json")["Body"]
-        .read()
-        .decode("utf-8")
-    )
+    content_object = s3.get_object(Bucket="showstats1", Key=artist + "_uuids.json")["Body"].read().decode("utf-8")
 
     dropdown_list = json.loads(content_object)
 
@@ -43,11 +37,7 @@ def filter_dataset(df, phish_uuids, wsp_uuids, goose_uuids, billy_uuids, dead_uu
 
 def create_show_list(df: pd.DataFrame, artist_name: str):
     show_list = []
-    df_new = (
-        df[(df["artist"] == artist_name) | (df["artist.name"] == artist_name)]
-        .reset_index(drop=True)
-        .copy()
-    )
+    df_new = df[(df["artist"] == artist_name) | (df["artist.name"] == artist_name)].reset_index(drop=True).copy()
     # df_new["date_prod"] = (
     #     df_new[["display_date", "eventDate"]].bfill(axis=1).iloc[:, 0].copy()
     # )
@@ -69,9 +59,7 @@ color_dict = {
     "Billy Strings": "#779ecb",  # 00C39C 6AC1B8
 }
 
-category_orders = {
-    "artist": ["Billy Strings", "Goose", "Grateful Dead", "Phish", "Widespread Panic"]
-}
+category_orders = {"artist": ["Billy Strings", "Goose", "Grateful Dead", "Phish", "Widespread Panic"]}
 
 slugs = [
     "grateful-dead",

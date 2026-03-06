@@ -3,10 +3,11 @@ import time
 import warnings
 
 import awswrangler as wr
-from showstats import utils as hf
 import numpy as np
 import pandas as pd
 import requests
+
+from showstats import utils as hf
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
 
@@ -66,9 +67,7 @@ def get_show_dates(slug_list: list[str]):
 
         # Find the dates of shows within each of the years returned from above
         for year in active_years:
-            url_years = (
-                f"https://api.relisten.net/api/v2/artists/{slug}/years/{year}"
-            )
+            url_years = f"https://api.relisten.net/api/v2/artists/{slug}/years/{year}"
             response = requests.get(url_years)
             years = pd.json_normalize(response.json(), record_path=["shows"])
             show_dates.append(years)
@@ -126,9 +125,7 @@ def get_show_songs(uuid_list=list[str]):
         url = f"https://api.relisten.net/api/v3/shows/{show_uuid}"
         response = requests.get(url)
         show_json = response.json()
-        show_records = pd.json_normalize(
-            data=show_json, record_path=["sources", "sets", "tracks"]
-        )
+        show_records = pd.json_normalize(data=show_json, record_path=["sources", "sets", "tracks"])
 
         # Select Columns, only take 1st recording of a given show
         show_records["show_uuid"] = show_uuid
@@ -154,7 +151,7 @@ def get_show_songs(uuid_list=list[str]):
             "GREETING",
             "GREET",
             "GREETS",
-            "THANK" "ENCORE",
+            "THANKENCORE",
             "OUTRO",
             "HAPPY BIRTHDAY",
             "PA RECORDING",
@@ -165,10 +162,8 @@ def get_show_songs(uuid_list=list[str]):
         show = show[show["title"] != "CROWD"].copy()
 
         # Clean up song titles (remove special characters, remove file formats (.wav, .flac))
-        show["title"] = show["title"].str.replace("^\d+\s+", "", regex=True)
-        show["title"] = show["title"].str.replace(
-            ".WAV|.FLAC|-|>|<|[|]", "", regex=True
-        )
+        show["title"] = show["title"].str.replace(r"^\d+\s+", "", regex=True)
+        show["title"] = show["title"].str.replace(".WAV|.FLAC|-|>|<|[|]", "", regex=True)
         setlist_tracks.append(show)
 
     setlist_final = pd.concat(setlist_tracks)
@@ -180,9 +175,7 @@ def get_setlist_fm(mbid=list[str], headers=dict()):
     base_url = f"https://api.setlist.fm/rest/1.0/artist/{mbid}/setlists?"
     request = requests.get(base_url, headers=headers)
     find_num_pages = pd.json_normalize(request.json())
-    find_num_pages["num_pages"] = np.ceil(
-        find_num_pages["total"] / find_num_pages["itemsPerPage"]
-    )
+    find_num_pages["num_pages"] = np.ceil(find_num_pages["total"] / find_num_pages["itemsPerPage"])
     num_pages = np.int64(find_num_pages.iloc[:, 5][0])
 
     setlist_info = []
@@ -204,9 +197,7 @@ def get_setlist_fm(mbid=list[str], headers=dict()):
         ]
 
         df = df[select_cols]
-        df["eventDate"] = pd.to_datetime(
-            df["eventDate"], yearfirst=True, format="%d-%m-%Y"
-        ).astype("str")
+        df["eventDate"] = pd.to_datetime(df["eventDate"], yearfirst=True, format="%d-%m-%Y").astype("str")
         setlist_info.append(df)
 
         print(df["eventDate"])
@@ -255,9 +246,7 @@ def get_sfm_setlists(mbid: str, headers=dict()):
     base_url = f"https://api.setlist.fm/rest/1.0/artist/{mbid}/setlists?"
     request = requests.get(base_url, headers=headers)
     find_num_pages = pd.json_normalize(request.json())
-    find_num_pages["num_pages"] = np.ceil(
-        find_num_pages["total"] / find_num_pages["itemsPerPage"]
-    )
+    find_num_pages["num_pages"] = np.ceil(find_num_pages["total"] / find_num_pages["itemsPerPage"])
     num_pages = np.int64(find_num_pages.iloc[:, 5][0])
 
     setlist_data = []
@@ -267,9 +256,7 @@ def get_sfm_setlists(mbid: str, headers=dict()):
         page = requests.get(url, headers=headers)
         time.sleep(3)
         df = pd.json_normalize(page.json(), record_path=["setlist"])
-        df["eventDate"] = pd.to_datetime(
-            df["eventDate"], yearfirst=True, format="%d-%m-%Y"
-        ).astype("str")
+        df["eventDate"] = pd.to_datetime(df["eventDate"], yearfirst=True, format="%d-%m-%Y").astype("str")
         setlist_data.append(df)
 
     sfm_pages = pd.concat(setlist_data)
@@ -285,9 +272,7 @@ def get_sfm_setlists(mbid: str, headers=dict()):
         fix_json = flatten_nested_json_df(sets)
         fix_json["artist.name"] = artist
         fix_json["eventDate"] = date
-        fix_json = (
-            fix_json[select_cols].dropna(subset=["song.name"]).reset_index(drop=False)
-        )
+        fix_json = fix_json[select_cols].dropna(subset=["song.name"]).reset_index(drop=False)
         fix_json["index"] = fix_json["index"] + 1
 
         setlist_return.append(fix_json)
@@ -322,25 +307,19 @@ def write_dropdown_choices(df: pd.DataFrame):
 
 def create_new_cols_write_df(df: pd.DataFrame):
     df["location_sfm"] = df["venue.city.name"] + ", " + df["venue.city.state"]
-    df["venue_location"] = (
-        df[["location_sfm", "venue.location"]].bfill(axis=1).iloc[:, 0]
-    )
+    df["venue_location"] = df[["location_sfm", "venue.location"]].bfill(axis=1).iloc[:, 0]
     df["date_prod"] = df[["display_date", "eventDate"]].bfill(axis=1).iloc[:, 0]
     df["venue_name"] = df[["venue_sfm", "venue.name"]].bfill(axis=1).iloc[:, 0]
-    df["latitude"] = (
-        df[["venue.latitude", "venue.city.coords.lat"]].bfill(axis=1).iloc[:, 0]
-    )
-    df["longitude"] = (
-        df[["venue.longitude", "venue.city.coords.long"]].bfill(axis=1).iloc[:, 0]
-    )
+    df["latitude"] = df[["venue.latitude", "venue.city.coords.lat"]].bfill(axis=1).iloc[:, 0]
+    df["longitude"] = df[["venue.longitude", "venue.city.coords.long"]].bfill(axis=1).iloc[:, 0]
 
     df["year_prod"] = df["date_prod"].str.slice(0, 4)
     df["artist_prod"] = df[["artist", "artist.name"]].bfill(axis=1).iloc[:, 0]
 
     df["alt_uuid"] = df["artist.name"] + df["eventDate"] + df["venue_location"]
-    df[["uuid", "alt_uuid"]] = df.groupby(["date_prod", "artist_prod"])[
-        ["uuid", "alt_uuid"]
-    ].transform(lambda x: x.ffill().bfill())
+    df[["uuid", "alt_uuid"]] = df.groupby(["date_prod", "artist_prod"])[["uuid", "alt_uuid"]].transform(
+        lambda x: x.ffill().bfill()
+    )
 
     df["uuid"] = df[["uuid", "alt_uuid"]].bfill(axis=1).iloc[:, 0].copy()
     df = df.drop(columns=["alt_uuid"]).copy()
@@ -386,19 +365,13 @@ def combine_and_save_dataset(old_show_file: str, append_mode=False):
     new_show_dates = all_show_dates[all_show_dates["uuid"].isin(uuids_to_score)]
 
     print("joining new_show_dates to all tracks")
-    final_df = new_show_dates.merge(
-        all_tracks, left_on="uuid", right_on="show_uuid", how="left"
-    )
+    final_df = new_show_dates.merge(all_tracks, left_on="uuid", right_on="show_uuid", how="left")
 
     final_df["index"] = final_df.groupby(["artist", "display_date"]).cumcount() + 1
 
-    final_df.to_parquet(
-        path="/Users/brandonmurphy/projects/show_stats/ShowStats/data/intermediate_relisten.parquet"
-    )
+    final_df.to_parquet(path="/Users/brandonmurphy/projects/show_stats/ShowStats/data/intermediate_relisten.parquet")
 
-    final_df = pd.read_parquet(
-        "/Users/brandonmurphy/projects/show_stats/ShowStats/data/intermediate_relisten.parquet"
-    )
+    final_df = pd.read_parquet("/Users/brandonmurphy/projects/show_stats/ShowStats/data/intermediate_relisten.parquet")
 
     print("Generating SetlistFM indivdual show data")
     billy = get_setlist_fm(mbid="640db492-34c4-47df-be14-96e2cd4b9fe4", headers=headers)
@@ -408,43 +381,23 @@ def combine_and_save_dataset(old_show_file: str, append_mode=False):
     phish = get_setlist_fm(mbid="e01646f2-2a04-450d-8bf2-0d993082e058", headers=headers)
 
     setlist_fm = pd.concat([billy, goose, dead, wsp, phish], axis=0)
-    setlist_fm.to_parquet(
-        path="/Users/brandonmurphy/projects/show_stats/ShowStats/data/sfm_individual_shows.parquet"
-    )
+    setlist_fm.to_parquet(path="/Users/brandonmurphy/projects/show_stats/ShowStats/data/sfm_individual_shows.parquet")
 
-    setlist_fm = pd.read_parquet(
-        "/Users/brandonmurphy/projects/show_stats/ShowStats/data/sfm_individual_shows.parquet"
-    )
+    setlist_fm = pd.read_parquet("/Users/brandonmurphy/projects/show_stats/ShowStats/data/sfm_individual_shows.parquet")
 
     print("Generating setlist fm song data")
-    billy_sfm = get_sfm_setlists(
-        mbid="640db492-34c4-47df-be14-96e2cd4b9fe4", headers=headers
-    )
-    goose_sfm = get_sfm_setlists(
-        mbid="b925a474-d245-4217-bc13-2e153d82bebb", headers=headers
-    )
-    dead_sfm = get_sfm_setlists(
-        mbid="6faa7ca7-0d99-4a5e-bfa6-1fd5037520c6", headers=headers
-    )
-    wsp_sfm = get_sfm_setlists(
-        mbid="3797a6d0-7700-44bf-96fb-f44386bc9ab2", headers=headers
-    )
-    phish_sfm = get_sfm_setlists(
-        mbid="e01646f2-2a04-450d-8bf2-0d993082e058", headers=headers
-    )
+    billy_sfm = get_sfm_setlists(mbid="640db492-34c4-47df-be14-96e2cd4b9fe4", headers=headers)
+    goose_sfm = get_sfm_setlists(mbid="b925a474-d245-4217-bc13-2e153d82bebb", headers=headers)
+    dead_sfm = get_sfm_setlists(mbid="6faa7ca7-0d99-4a5e-bfa6-1fd5037520c6", headers=headers)
+    wsp_sfm = get_sfm_setlists(mbid="3797a6d0-7700-44bf-96fb-f44386bc9ab2", headers=headers)
+    phish_sfm = get_sfm_setlists(mbid="e01646f2-2a04-450d-8bf2-0d993082e058", headers=headers)
     setlist_fm_songs = pd.concat([billy_sfm, goose_sfm, dead_sfm, wsp_sfm, phish_sfm])
-    setlist_fm_songs.to_parquet(
-        path="/Users/brandonmurphy/projects/show_stats/ShowStats/data/sfm_setlists.parquet"
-    )
+    setlist_fm_songs.to_parquet(path="/Users/brandonmurphy/projects/show_stats/ShowStats/data/sfm_setlists.parquet")
 
-    setlist_fm_songs = pd.read_parquet(
-        "/Users/brandonmurphy/projects/show_stats/ShowStats/data/sfm_setlists.parquet"
-    )
+    setlist_fm_songs = pd.read_parquet("/Users/brandonmurphy/projects/show_stats/ShowStats/data/sfm_setlists.parquet")
 
     print("Merging setlist fm songs to setlist fm shows")
-    sfm_final = setlist_fm.merge(
-        setlist_fm_songs, how="left", on=["eventDate", "artist.name"]
-    )
+    sfm_final = setlist_fm.merge(setlist_fm_songs, how="left", on=["eventDate", "artist.name"])
 
     if append_mode:
         final_df = pd.concat([old_showstats, final_df], axis=0)
@@ -459,9 +412,7 @@ def combine_and_save_dataset(old_show_file: str, append_mode=False):
         right_on=["eventDate", "artist.name", "index"],
     )
 
-    write_df.to_parquet(
-        "/Users/brandonmurphy/projects/show_stats/ShowStats/data/temp_delete.parquet"
-    )
+    write_df.to_parquet("/Users/brandonmurphy/projects/show_stats/ShowStats/data/temp_delete.parquet")
 
     print("Coalescing venue information")
     write_df = create_new_cols_write_df(write_df)
@@ -470,9 +421,7 @@ def combine_and_save_dataset(old_show_file: str, append_mode=False):
 
     write_dropdown_choices(write_df)
 
-    wr.s3.to_parquet(
-        write_df[write_cols], path="s3://showstats1/showstats_update_new.parquet"
-    )
+    wr.s3.to_parquet(write_df[write_cols], path="s3://showstats1/showstats_update_new.parquet")
 
     print("Done!!!")
 
