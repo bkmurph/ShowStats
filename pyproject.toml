@@ -1,0 +1,45 @@
+[project]
+name = "show-stats"
+version = "0.1.0"
+description = "Concert statistics dashboard for jam bands"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    # Web framework
+    "dash>=2.18",
+    "dash-ag-grid>=2.4",
+    "dash-bootstrap-components>=1.6",
+    "dash-bootstrap-templates>=1.1",
+    "dash-extensions>=1.0",
+    "Flask-Caching>=2.3",
+    "gunicorn>=23.0",
+    # Data processing
+    "pandas>=2.2",
+    "scipy>=1.14",
+    "pyarrow>=18.0",
+    "pyhumps>=3.8",
+    # AWS
+    "awswrangler>=3.10",
+    # APIs
+    "setlist-fm-client>=0.4",
+    "plotly>=5.24",
+]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.9",
+]
+
+[tool.uv]
+package = false
+
+[tool.ruff]
+target-version = "py313"
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
