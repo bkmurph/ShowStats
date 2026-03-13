@@ -2,7 +2,6 @@
 name = "show-stats"
 version = "0.1.0"
 description = "Concert statistics dashboard for jam bands"
-readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     # Web framework

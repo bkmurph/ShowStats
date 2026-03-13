@@ -2,6 +2,7 @@
 #               Imports               #
 #######################################
 
+import pandas as pd
 import awswrangler as wr
 import dash
 import dash_ag_grid as dag
@@ -11,6 +12,8 @@ from dash import Input, Output, State, callback, dcc, html
 from dash_bootstrap_templates import load_figure_template
 
 from showstats import utils as hf
+from showstats.cache import cache
+from showstats.config import ARTIST_S3_KEY_MAPPING, S3_BUCKET
 
 #######################################
 #            Initialize App           #
@@ -18,10 +21,39 @@ from showstats import utils as hf
 dash.register_page(__name__, path="/", name="ShowStats")
 
 #######################################
-#            Read in data             #
+#         Lazy Data Loading           #
 #######################################
-shows = wr.s3.read_parquet("s3://showstats1/showstats_update_new.parquet")
-shows = shows.reset_index(drop=True)
+
+_UUID_TO_ARTIST_KEY = {v: k for k, v in {
+    "phish": "phish",
+    "wsp": "wsp",
+    "goose": "goose",
+    "dead": "dead",
+    "billy": "billy",
+}.items()}
+
+
+@cache.memoize(timeout=3600)
+def load_artist_data(artist_key: str) -> pd.DataFrame:
+    return wr.s3.read_parquet(f"s3://{S3_BUCKET}/{artist_key}.parquet")
+
+
+def get_filtered_shows(phish_uuids, panic_uuids, goose_uuids, billy_uuids, dead_uuids):
+    uuid_map = {
+        "phish": phish_uuids or [],
+        "wsp": panic_uuids or [],
+        "goose": goose_uuids or [],
+        "dead": dead_uuids or [],
+        "billy": billy_uuids or [],
+    }
+    keys_to_load = [k for k, v in uuid_map.items() if v]
+    if not keys_to_load:
+        return pd.DataFrame()
+    dfs = [load_artist_data(k) for k in keys_to_load]
+    shows = pd.concat(dfs, ignore_index=True)
+    all_uuids = phish_uuids + panic_uuids + goose_uuids + billy_uuids + dead_uuids
+    return shows[shows["uuid"].isin(all_uuids)]
+
 
 #######################################
 #            Read in Template         #
@@ -222,7 +254,7 @@ layout = dbc.Container(
     prevent_initial_call=False,
 )
 def update_show_counts(n_clicks, phish_uuids, wsp_uuids, goose_uuids, billy_uuids, dead_uuids):
-    data = hf.filter_dataset(shows, phish_uuids, wsp_uuids, goose_uuids, billy_uuids, dead_uuids)
+    data = get_filtered_shows(phish_uuids, wsp_uuids, goose_uuids, billy_uuids, dead_uuids)
     shows_by_year = (
         data.groupby(["year_prod", "artist_prod"])["uuid"]
         .nunique()
@@ -263,7 +295,7 @@ def update_show_counts(n_clicks, phish_uuids, wsp_uuids, goose_uuids, billy_uuid
     prevent_initial_call=False,
 )
 def update_unique_songs(n_clicks, phish_uuids, wsp_uuids, goose_uuids, billy_uuids, dead_uuids):
-    my_shows = hf.filter_dataset(shows, phish_uuids, wsp_uuids, goose_uuids, billy_uuids, dead_uuids)
+    my_shows = get_filtered_shows(phish_uuids, wsp_uuids, goose_uuids, billy_uuids, dead_uuids)
     unique_songs = (
         my_shows.dropna(subset=["song.name"]).groupby(["artist_prod"])["song.name"].nunique().reset_index().copy()
     )
@@ -297,7 +329,7 @@ def update_unique_songs(n_clicks, phish_uuids, wsp_uuids, goose_uuids, billy_uui
     prevent_initial_call=False,
 )
 def update_scatter_mapbox(n_clicks, phish_uuids, wsp_uuids, goose_uuids, billy_uuids, dead_uuids):
-    my_shows = hf.filter_dataset(shows, phish_uuids, wsp_uuids, goose_uuids, billy_uuids, dead_uuids)
+    my_shows = get_filtered_shows(phish_uuids, wsp_uuids, goose_uuids, billy_uuids, dead_uuids)
     map_data = my_shows.reset_index(drop=True).copy()
     map_data = hf.convert_seconds_to_hms(map_data, "avg_duration")
     map_data = (
@@ -361,7 +393,7 @@ def update_scatter_mapbox(n_clicks, phish_uuids, wsp_uuids, goose_uuids, billy_u
     prevent_initial_call=False,
 )
 def update_top_songs(n_clicks, phish_uuids, wsp_uuids, goose_uuids, billy_uuids, dead_uuids):
-    my_shows = hf.filter_dataset(shows, phish_uuids, wsp_uuids, goose_uuids, billy_uuids, dead_uuids)
+    my_shows = get_filtered_shows(phish_uuids, wsp_uuids, goose_uuids, billy_uuids, dead_uuids)
     song_counts = (
         my_shows.groupby(["artist_prod", "song.name"])["date_prod"]
         .count()
@@ -407,7 +439,7 @@ def update_top_songs(n_clicks, phish_uuids, wsp_uuids, goose_uuids, billy_uuids,
     prevent_initial_call=False,
 )
 def update_longest_jams(n_clicks, phish_uuids, wsp_uuids, goose_uuids, billy_uuids, dead_uuids):
-    my_shows = hf.filter_dataset(shows, phish_uuids, wsp_uuids, goose_uuids, billy_uuids, dead_uuids)
+    my_shows = get_filtered_shows(phish_uuids, wsp_uuids, goose_uuids, billy_uuids, dead_uuids)
     longest_jams = (
         my_shows.sort_values("duration", ascending=False)
         .assign(duration_hms=my_shows["duration"].astype("datetime64[s]").dt.strftime("%M:%S"))

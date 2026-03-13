@@ -1,15 +1,12 @@
 import os
 
 # --- API credentials (from environment) ---
-SETLIST_FM_API_KEY = os.environ.get("SETLIST_FM_API_KEY")
-if not SETLIST_FM_API_KEY:
-    raise EnvironmentError("SETLIST_FM_API_KEY environment variable is not set")
-
+SETLIST_FM_API_KEY = os.environ.get("SETLIST_FM_API_KEY", "")
 SETLIST_FM_HEADERS = {"Accept": "application/json", "x-api-key": SETLIST_FM_API_KEY}
 
 # --- AWS ---
 S3_BUCKET = os.environ.get("SHOWSTATS_S3_BUCKET", "showstats1")
-S3_OUTPUT_PATH = f"s3://{S3_BUCKET}/showstats_update_new.parquet"
+S3_ARTIST_PARQUET_PREFIX = f"s3://{S3_BUCKET}"
 
 # --- Artist config ---
 ARTIST_SLUGS = ["grateful-dead", "phish", "billy-strings", "goose", "wsp"]

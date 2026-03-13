@@ -13,7 +13,7 @@ from showstats.config import (
     ARTIST_MBID_MAPPING,
     ARTIST_S3_KEY_MAPPING,
     ARTIST_SLUGS,
-    S3_OUTPUT_PATH,
+    S3_ARTIST_PARQUET_PREFIX,
     SETLIST_FILTER_KEYWORDS,
     SETLIST_FM_HEADERS,
     WRITE_COLS,
@@ -97,6 +97,7 @@ def get_show_songs(uuid_list: list[str]):
         show["title"] = show["title"].str.replace(r"^\d+\s+", "", regex=True)
         show["title"] = show["title"].str.replace(r"\.WAV|\.FLAC|-|>|<|\[|\]", "", regex=True)
         setlist_tracks.append(show)
+        time.sleep(0.25)
 
     return pd.concat(setlist_tracks)
 
@@ -272,16 +273,14 @@ def combine_and_save_dataset(old_show_file: str, append_mode=False):
     final_df["index"] = final_df.groupby(["artist", "display_date"]).cumcount() + 1
 
     print("Generating SetlistFM individual show data")
-    setlist_fm = pd.concat([
-        get_setlist_fm(mbid=mbid, headers=SETLIST_FM_HEADERS)
-        for mbid in ARTIST_MBID_MAPPING.values()
-    ])
+    setlist_fm = pd.concat(
+        [get_setlist_fm(mbid=mbid, headers=SETLIST_FM_HEADERS) for mbid in ARTIST_MBID_MAPPING.values()]
+    )
 
     print("Generating setlist fm song data")
-    setlist_fm_songs = pd.concat([
-        get_sfm_setlists(mbid=mbid, headers=SETLIST_FM_HEADERS)
-        for mbid in ARTIST_MBID_MAPPING.values()
-    ])
+    setlist_fm_songs = pd.concat(
+        [get_sfm_setlists(mbid=mbid, headers=SETLIST_FM_HEADERS) for mbid in ARTIST_MBID_MAPPING.values()]
+    )
 
     print("Merging setlist fm songs to setlist fm shows")
     sfm_final = setlist_fm.merge(setlist_fm_songs, how="left", on=["eventDate", "artist.name"])
@@ -303,7 +302,9 @@ def combine_and_save_dataset(old_show_file: str, append_mode=False):
 
     write_dropdown_choices(write_df)
 
-    wr.s3.to_parquet(write_df[WRITE_COLS], path=S3_OUTPUT_PATH)
+    for artist_name, s3_key in ARTIST_S3_KEY_MAPPING.items():
+        artist_df = write_df[write_df["artist_prod"] == artist_name][WRITE_COLS].copy()
+        wr.s3.to_parquet(artist_df, path=f"{S3_ARTIST_PARQUET_PREFIX}/{s3_key}.parquet")
 
     print("Done!!!")
 

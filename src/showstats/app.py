@@ -39,6 +39,10 @@ app.index_string = """<!DOCTYPE html>
 
 server = app.server
 
+from showstats.cache import cache  # noqa: E402
+
+cache.init_app(server)
+
 sidebar = dbc.Nav(
     [
         dbc.NavLink(
