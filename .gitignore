@@ -15,3 +15,12 @@ data/
 # Package build
 *.egg-info/
 dist/
+
+# Python virtual environments
+.venv/
+
+# Terraform artifacts
+terraform/.terraform/
+terraform/*.tfstate
+terraform/*.tfstate.backup
+terraform/*.tfvars
