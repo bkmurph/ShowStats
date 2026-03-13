@@ -1,0 +1,13 @@
+venv/
+.venv/
+__pycache__/
+*.pyc
+.git/
+.env
+*.parquet
+*.csv
+data/
+dist/
+*.egg-info/
+terraform/
+.DS_Store

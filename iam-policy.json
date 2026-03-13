@@ -1,0 +1,24 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ShowStatsDeployAccess",
+      "Effect": "Allow",
+      "Action": [
+        "bedrock:*",
+        "ecr:*",
+        "ecs:*",
+        "s3:*",
+        "iam:*",
+        "cloudfront:*",
+        "elasticloadbalancing:*",
+        "ec2:*",
+        "logs:*",
+        "secretsmanager:*",
+        "scheduler:*",
+        "sts:GetCallerIdentity"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
