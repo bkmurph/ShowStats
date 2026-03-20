@@ -39,6 +39,12 @@ app.index_string = """<!DOCTYPE html>
 
 server = app.server
 
+
+@server.route("/health")
+def health():
+    return "OK", 200
+
+
 from showstats.cache import cache  # noqa: E402
 
 cache.init_app(server)

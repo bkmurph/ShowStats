@@ -24,6 +24,14 @@ resource "aws_ecs_task_definition" "app" {
       protocol      = "tcp"
     }]
 
+    healthCheck = {
+      command     = ["CMD-SHELL", "python3 -c \"import urllib.request; urllib.request.urlopen('http://localhost:8050/health')\" || exit 1"]
+      interval    = 30
+      timeout     = 10
+      retries     = 3
+      startPeriod = 120
+    }
+
     environment = [
       { name = "SHOWSTATS_S3_BUCKET", value = var.s3_bucket },
       { name = "AWS_DEFAULT_REGION", value = var.aws_region },
@@ -47,6 +55,8 @@ resource "aws_ecs_service" "app" {
   task_definition = aws_ecs_task_definition.app.arn
   desired_count   = 1
   launch_type     = "FARGATE"
+
+  health_check_grace_period_seconds = 120
 
   network_configuration {
     subnets          = aws_subnet.public[*].id
