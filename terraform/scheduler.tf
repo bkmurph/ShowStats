@@ -4,7 +4,6 @@ resource "aws_scheduler_schedule" "pipeline" {
 
   schedule_expression          = "rate(14 days)"
   schedule_expression_timezone = "America/New_York"
-  start_date                   = var.scheduler_start_date
 
   flexible_time_window {
     mode                      = "FLEXIBLE"

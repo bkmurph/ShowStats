@@ -10,7 +10,7 @@ aws ecr get-login-password --region "${REGION}" | \
   docker login --username AWS --password-stdin "${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com"
 
 echo "==> Building Docker image..."
-docker build -t showstats .
+docker build --platform linux/amd64 -t showstats .
 
 echo "==> Tagging and pushing to ECR..."
 docker tag showstats:latest "${ECR_URL}:latest"

@@ -132,7 +132,6 @@ def get_setlist_fm(mbid: str, headers: dict):
         df = df[select_cols]
         df["eventDate"] = pd.to_datetime(df["eventDate"], yearfirst=True, format="%d-%m-%Y").astype("str")
         setlist_info.append(df)
-        print(df["eventDate"])
 
     df_out = pd.concat(setlist_info)
     df_out = df_out.rename(columns={"venue.name": "venue_sfm"})
